@@ -1,5 +1,5 @@
 [package]
-name = "dist_table"
+name = "distop"
 version = "0.1.0"
 edition = "2021"
 
@@ -16,3 +16,4 @@ procfs = "0.18.0"
 tokio-util = { version = "0.7.18", features = ["codec"] }
 futures-util = "0.3.32"
 ratatui = "0.30.0"
+crossterm = "0.29.0"

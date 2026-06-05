@@ -455,12 +455,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "dist_table"
+name = "distop"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
  "clap",
+ "crossterm",
  "futures-util",
  "hostname",
  "procfs",
