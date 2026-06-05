@@ -3,6 +3,9 @@ mod head;
 mod worker;
 mod message;
 
+// Files in get_data
+mod get_data;
+use crate::get_data::processes::running_processes;
 // Parser for the command line that reads flags and args
 use clap::Parser;
 

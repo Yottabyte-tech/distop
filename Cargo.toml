@@ -12,3 +12,4 @@ serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 hostname = "0.4"
 anyhow = "1.0.102"
+procfs = "0.18.0"

@@ -9,6 +9,9 @@ use std::time::Duration;
 // Imports sysinfo to read usage details
 use sysinfo::{System, RefreshKind};
 
+use crate::get_data::processes::running_processes;
+
+
 pub async fn run(head_ip: String, port: u16) -> anyhow::Result<()> {
     println!("Worker started → Connecting to head node {}:{}", head_ip, port);
     
@@ -60,6 +63,7 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str) -> Result<(), 
         load_average_1min: load.one,
         process_count: sys.processes().len(),
         status: "online".to_string(),
+        processes: running_processes()
     };
     
     // Converts struct to JSON
