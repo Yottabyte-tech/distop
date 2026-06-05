@@ -50,7 +50,7 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str) -> Result<(), 
     sys.refresh_all();
 
     tokio::time::sleep(std::time::Duration::from_millis(250)).await;
-    sys.refresh_cpu(); // Refresh only CPU for the new readings
+    sys.refresh_cpu_all(); // Refresh only CPU for the new readings
 
     let ram_used = sys.used_memory() as f64 / 1_073_741_824.0; // Gets RAM usage
     let ram_total = sys.total_memory() as f64 / 1_073_741_824.0; // Gets ammount of system RAM
