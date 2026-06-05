@@ -54,6 +54,11 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
     let ram_total = sys.total_memory() as f64 / 1_073_741_824.0; // Gets ammount of system RAM
     let load = System::load_average(); // Gets the system load
 
+
+    for (index, cpu) in sys.cpus().iter().enumerate() {
+        println!("Core {}: {} - {:.2}%", index, cpu.name(), cpu.cpu_usage());
+    }
+
     // Adds all of the data to the message.rs WorkerInfo struct
     let info = WorkerInfo {
         hostname: hostname.to_string(),

@@ -110,15 +110,22 @@ fn render_app(frame: &mut Frame) {
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
             .split(frame.area());
         
-        let mut cpu_usage: String = "".to_string();
+        let mut computer_usage: String = "".to_string();
 
         for list_elem in list.iter(){
-            let node_cpu_usage = format!("Usage: {:.2}%", list_elem.info.cpu_usage);
-            cpu_usage = format!("{}\n{}", cpu_usage, node_cpu_usage);
+
+            let node_name = &list_elem.info.hostname;
+            let node_cpu_usage = format!("CPU Usage: {:.2}%", list_elem.info.cpu_usage);
+
+            let ram_used_gb = &list_elem.info.ram_used_gb;
+            let ram_total_gb = &list_elem.info.ram_total_gb;
+            let ram_percent_used = ram_used_gb/ram_total_gb * 100.0;
+            let computer_usage_block = format!("╭─┤{}│\n│\n├─┤{}│\n│\n╰─┤RAM Usage: {:.2}% ({:.2}GB/{:.2}GB)│\n\n", node_name, node_cpu_usage, ram_percent_used, ram_used_gb, ram_total_gb);
+            computer_usage = format!("{}{}", computer_usage, computer_usage_block)
         }
 
         // Create the first paragraph block
-        let block1 = Paragraph::new(cpu_usage)
+        let block1 = Paragraph::new(computer_usage)
             .block(Block::default()
                    .borders(Borders::ALL)
                    .title("╯CPU╰")

@@ -22,7 +22,6 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
     loop {
         // Waits for new worker to connect to and returns the connection socket and ip/port in addr
         let (socket, addr) = listener.accept().await?;
-        println!("[+] Worker connected from {}", addr);
         
         // Starts a new Async to read from each worker individually
         tokio::spawn(async move {
@@ -65,7 +64,6 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
                     }
                 }
             }
-            println!("[-] Worker {} disconnected", addr);
             RemoveNode(&node_name);
         });
     }
