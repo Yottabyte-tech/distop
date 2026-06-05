@@ -104,15 +104,15 @@ fn render_app(frame: &mut Frame) {
    
     if( list.len() > 0 ){
     
-
         // Split the terminal horizontally into 2 equal columns (50% each)
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
             .split(frame.area());
     
+        let CPU_usage = format!("Usage: {:.2}%", list[0].info.cpu_usage);
         // Create the first paragraph block
-        let block1 = Paragraph::new(list[0].info.cpu_usage.to_string())
+        let block1 = Paragraph::new(CPU_usage)
             .block(Block::default()
                    .borders(Borders::ALL)
                    .title("╯CPU╰")

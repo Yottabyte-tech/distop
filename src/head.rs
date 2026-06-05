@@ -50,7 +50,7 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
                                     first_time = false;
                                 }
                                 node_name = info.clone().hostname;
-                                ProcessData(info);
+                                ProcessData(&info, &node_name);
                             }
                             Err(e) => {
                                 eprintln!("[-] Failed to parse WorkerInfo from line: {}", e);
