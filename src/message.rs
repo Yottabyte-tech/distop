@@ -12,5 +12,6 @@ pub struct WorkerInfo {
     pub load_average_1min: f64,
     pub process_count: usize,
     pub status: String,
-    pub processes: Vec<ProcessInfo>
+    pub processes: Vec<ProcessInfo>,
+    pub cores: Vec<f32>,
 }

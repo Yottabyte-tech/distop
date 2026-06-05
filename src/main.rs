@@ -117,10 +117,7 @@ fn render_app(frame: &mut Frame) {
             let node_name = &list_elem.info.hostname;
             let node_cpu_usage = format!("CPU Usage: {:.2}%", list_elem.info.cpu_usage);
 
-            let ram_used_gb = &list_elem.info.ram_used_gb;
-            let ram_total_gb = &list_elem.info.ram_total_gb;
-            let ram_percent_used = ram_used_gb/ram_total_gb * 100.0;
-            let computer_usage_block = format!("╭─┤{}│\n│\n├─┤{}│\n│\n╰─┤RAM Usage: {:.2}% ({:.2}GB/{:.2}GB)│\n\n", node_name, node_cpu_usage, ram_percent_used, ram_used_gb, ram_total_gb);
+            let computer_usage_block = format!("╭─┤{}│\n│\n├─┤{}│\n│\n", node_name, node_cpu_usage);
             computer_usage = format!("{}{}", computer_usage, computer_usage_block)
         }
 

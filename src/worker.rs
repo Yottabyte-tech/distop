@@ -54,9 +54,9 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
     let ram_total = sys.total_memory() as f64 / 1_073_741_824.0; // Gets ammount of system RAM
     let load = System::load_average(); // Gets the system load
 
-
+    let mut cores_list = Vec::new();
     for (index, cpu) in sys.cpus().iter().enumerate() {
-        println!("Core {}: {} - {:.2}%", index, cpu.name(), cpu.cpu_usage());
+        cores_list.push(cpu.cpu_usage());
     }
 
     // Adds all of the data to the message.rs WorkerInfo struct
@@ -69,7 +69,8 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
         load_average_1min: load.one,
         process_count: sys.processes().len(),
         status: "online".to_string(),
-        processes: running_processes()
+        processes: running_processes(),
+        cores: cores_list,
     };
     
     // Converts struct to JSON
