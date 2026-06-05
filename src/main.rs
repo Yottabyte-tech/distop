@@ -52,7 +52,7 @@ async fn main() -> anyhow::Result<()> {
     if args.worker {
 
         let head_ip = args.ip.expect("--ip <HEAD_IP> is required when running as worker");
-        worker::run(head_ip, args.port);
+        worker::run(head_ip, args.port).await.expect("");
 
     } 
     else if args.head {
