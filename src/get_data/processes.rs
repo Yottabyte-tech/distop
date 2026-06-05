@@ -104,24 +104,6 @@ pub fn running_processes() -> Vec<ProcessInfo> {
             .then_with(|| b.resident_set_size_bytes.cmp(&a.resident_set_size_bytes))
     });
 
-    println!(
-        "{:<8} {:<25} {:<10} {:<15} {:<15}",
-        "PID", "Name", "CPU (%)", "VIRT", "RSS"
-    );
-    println!("{:-<75}", "");
-
-    for proc in &processes {
-        println!(
-            "{:<8} {:<25} {:<10.2} {:<15} {:<15}",
-            proc.pid,
-            proc.name,
-            proc.cpu_usage_percentage,
-            HumanBytes(proc.virtual_memory_bytes).to_string(),
-            HumanBytes(proc.resident_set_size_bytes).to_string()
-        );
-    
-    }
-
 
     // let new_len = processes.len().saturating_sub(processes.len().saturating_sub(10));
     // processes.truncate(new_len);
