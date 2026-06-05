@@ -2,9 +2,9 @@ use procfs::process;
 use std::collections::HashMap;
 use std::thread;
 use std::time::{Duration, Instant};
-use serde::{Serialize, Deserialize}; // Add this import
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Serialize, Deserialize, Clone)] // Add Serialize and Deserialize here
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ProcessInfo {
     pub pid: i32,
     pub name: String,
@@ -29,6 +29,7 @@ impl std::fmt::Display for HumanBytes {
         }
     }
 }
+
 fn get_process_ticks(proc: &process::Process) -> u64 {
     let mut total_ticks = 0;
     if let Ok(tasks) = proc.tasks() {
@@ -118,7 +119,12 @@ pub fn running_processes() -> Vec<ProcessInfo> {
             HumanBytes(proc.virtual_memory_bytes).to_string(),
             HumanBytes(proc.resident_set_size_bytes).to_string()
         );
+    
     }
+
+
+    // let new_len = processes.len().saturating_sub(processes.len().saturating_sub(10));
+    // processes.truncate(new_len);
 
     return processes;
 }
