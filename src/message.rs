@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 use crate::get_data::processes::ProcessInfo;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WorkerInfo {
     pub hostname: String,
     pub timestamp: DateTime<Utc>,
