@@ -103,6 +103,18 @@ fn render_app(frame: &mut Frame) {
     let mut list = NODE_LIST.lock().unwrap();
    
     if( list.len() > 0 ){
+
+        let graph_chars: Vec<String> = vec![
+            "▁".to_string(),
+            "▂".to_string(),
+            "▃".to_string(),
+            "▄".to_string(),
+            "▅".to_string(),
+            "▆".to_string(),
+            "▇".to_string(),
+            "█".to_string(),
+        ];
+
     
         // Split the terminal horizontally into 2 equal columns (50% each)
         let chunks = Layout::default()
@@ -117,8 +129,14 @@ fn render_app(frame: &mut Frame) {
             let node_name = &list_elem.info.hostname;
             let node_cpu_usage = format!("CPU Usage: {:.2}%", list_elem.info.cpu_usage);
 
-            let computer_usage_block = format!("╭─┤{}│\n│\n├─┤{}│\n│\n", node_name, node_cpu_usage);
-            computer_usage = format!("{}{}", computer_usage, computer_usage_block)
+            let computer_usage_block = format!("\n\n╭─┤{}│\n│\n├─┤{}│\n│", node_name, node_cpu_usage);
+            computer_usage = format!("{}{}", computer_usage, computer_usage_block);
+
+            let mut core_index = 0;
+            for core in list_elem.info.cores.iter(){
+                core_index = core_index + 1;
+                computer_usage = format!("{}\n├─┤[Core {} Usage] {:.2}%", computer_usage, core_index, core);
+            }
         }
 
         // Create the first paragraph block
