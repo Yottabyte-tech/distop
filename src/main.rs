@@ -109,10 +109,16 @@ fn render_app(frame: &mut Frame) {
             .direction(Direction::Horizontal)
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
             .split(frame.area());
-    
-        let CPU_usage = format!("Usage: {:.2}%", list[0].info.cpu_usage);
+        
+        let mut cpu_usage: String = "".to_string();
+
+        for list_elem in list.iter(){
+            let node_cpu_usage = format!("Usage: {:.2}%", list_elem.info.cpu_usage);
+            cpu_usage = format!("{}\n{}", cpu_usage, node_cpu_usage);
+        }
+
         // Create the first paragraph block
-        let block1 = Paragraph::new(CPU_usage)
+        let block1 = Paragraph::new(cpu_usage)
             .block(Block::default()
                    .borders(Borders::ALL)
                    .title("╯CPU╰")

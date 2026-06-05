@@ -20,6 +20,10 @@ pub async fn run(head_ip: String, port: u16) -> anyhow::Result<()> {
         .map(|h| h.to_string_lossy().to_string())
         .unwrap_or_else(|_| "unknown".to_string());
 
+    // Initialize the system state ONCE here so it retains metrics history across iterations
+    let mut sys = System::new_with_specifics(RefreshKind::everything());
+    sys.refresh_all();
+
     // Main infinite loop
     loop {
         // Tries to connect to the head node
@@ -27,8 +31,8 @@ pub async fn run(head_ip: String, port: u16) -> anyhow::Result<()> {
 
             Ok(mut stream) => {
                 println!("Connected to head node. Sending updates...");
-                // Actually sends data and loops every 3 seconds
-                while let Ok(_) = send_worker_info(&mut stream, &hostname).await {
+                // Pass the mutable reference into the sender loop
+                while let Ok(_) = send_worker_info(&mut stream, &hostname, &mut sys).await {
                     tokio::time::sleep(Duration::from_secs(3)).await;
                 }
             }
@@ -42,15 +46,9 @@ pub async fn run(head_ip: String, port: u16) -> anyhow::Result<()> {
 }
 
 // Async data send function
-async fn send_worker_info(stream: &mut TcpStream, hostname: &str) -> Result<(), std::io::Error> {
-    // New info collector to read system data
-    let mut sys = System::new_with_specifics(RefreshKind::everything());
-
-    // Reads all data and pushes it to sys
+async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut System) -> Result<(), std::io::Error> {
+    // Reads all data and pushes it to sys (tracks true delta since the last tick)
     sys.refresh_all();
-
-    tokio::time::sleep(std::time::Duration::from_millis(250)).await;
-    sys.refresh_cpu_all(); // Refresh only CPU for the new readings
 
     let ram_used = sys.used_memory() as f64 / 1_073_741_824.0; // Gets RAM usage
     let ram_total = sys.total_memory() as f64 / 1_073_741_824.0; // Gets ammount of system RAM
@@ -83,3 +81,4 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str) -> Result<(), 
     // Confirms success
     Ok(())
 }
+
