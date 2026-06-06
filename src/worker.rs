@@ -36,7 +36,7 @@ pub async fn run(head_ip: String, port: u16) -> anyhow::Result<()> {
                     tokio::time::sleep(Duration::from_millis(500)).await;
                 }
             }
-            Err(e) => {
+            Err(_e) => {
 
                 // When connection is lost to head node, retry connection every 1 seconds
                 tokio::time::sleep(Duration::from_secs(1)).await;

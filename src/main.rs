@@ -7,7 +7,6 @@ use ratatui::{
 };
 use ratatui::style::Color;
 use ratatui::prelude::Stylize;
-use std::io;
 
 use std::sync::{LazyLock, Mutex};
 
@@ -20,7 +19,6 @@ mod get_data;
 
 // Import the node list var for importing data
 use handle_data::NODE_LIST;
-use handle_data::NodeInfo;
 
 use crate::get_data::processes::running_processes; // Parser for the command line that reads flags and args
 use clap::Parser;
@@ -123,8 +121,8 @@ async fn render_tui() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 fn render_app(frame: &mut Frame) {
 
     // Import the data list
-    let mut list = NODE_LIST.lock().unwrap();
-        if( list.len() > 0 ){
+    let list = NODE_LIST.lock().unwrap();
+        if list.len() > 0 {
         
         let graph_chars: Vec<String> = vec![
             "▁".to_string(),
