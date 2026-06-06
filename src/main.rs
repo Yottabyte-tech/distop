@@ -6,8 +6,8 @@ use ratatui::{
     Frame,
 };
 use ratatui::style::Color;
-use ratatui::prelude::Stylize;
-
+use ratatui_macros::text;
+use ratatui::prelude::{Text, Line, Span, Stylize};
 use std::sync::{LazyLock, Mutex};
 
 // Uses all of the files
@@ -146,7 +146,7 @@ fn render_app(frame: &mut Frame) {
 
 
 
-        let mut computer_usage: String = "".to_string();
+        let mut computer_usage = Text::default();
         
         for list_elem in list.iter(){
 
@@ -154,8 +154,8 @@ fn render_app(frame: &mut Frame) {
             
             let computer_usage_block = format!("\n\n╭─┤{}│\n│\n├─┤{}\n│", &list_elem.info.hostname, node_cpu_usage);
 
-            computer_usage = format!("{}{}", computer_usage, computer_usage_block);
-           
+            computer_usage.lines.extend(Text::from(computer_usage_block).lines);
+  
 
             for (_index, core) in list_elem.info.cores.iter().enumerate(){
                 
@@ -192,8 +192,16 @@ fn render_app(frame: &mut Frame) {
 
                 // Graph spacing
                 let spacing: usize = 10 - format!("{}{:.2}%", core_index, core).len().min(10);
+                
+                let core_u8: u8 = *core as u8;
 
-                computer_usage = format!("{}\n├─┤Core {} Usage: {:.2}%{}[ {} ]", computer_usage, core_index, core, " ".to_string().repeat(spacing), graph);
+                let core_line = Line::from(vec![
+                    Span::raw(format!("├─┤Core {} Usage: {:.2}%{}[ ", core_index, core, " ".to_string().repeat(spacing))),
+                    Span::raw(format!("{}", graph)).fg(Color::Rgb(core_u8, 100 - core_u8, 0)),
+                    Span::raw(" ]")
+                ]);
+                
+                computer_usage.lines.push(core_line);
             }
         }
         
