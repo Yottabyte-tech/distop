@@ -152,10 +152,17 @@ fn render_app(frame: &mut Frame) {
 
             let node_cpu_usage = format!("CPU Usage: [ {:.2}% ]", list_elem.info.cpu_usage);
             
-            let computer_usage_block = format!("\n\n╭─┤{}│\n│\n├─┤{}\n│", &list_elem.info.hostname, node_cpu_usage);
-
-            computer_usage.lines.extend(Text::from(computer_usage_block).lines);
-  
+            // Push each line explicitly to allow granular styling
+            computer_usage.lines.push(Line::from("╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌").fg(Color::Rgb(100,100,100))); // Second newline
+            computer_usage.lines.push(Line::from(vec![
+                Span::raw("╭─┤ "),
+                Span::raw(list_elem.info.hostname.to_string()).bold().black().on_white(), // Stylize hostname as bold!
+                Span::raw(" │"),
+            ]));
+            computer_usage.lines.push(Line::from("│"));
+            computer_usage.lines.push(Line::from(format!("├─┤{}", node_cpu_usage)));
+            computer_usage.lines.push(Line::from("│"));
+ 
 
             for (_index, core) in list_elem.info.cores.iter().enumerate(){
                 
@@ -204,7 +211,8 @@ fn render_app(frame: &mut Frame) {
                 computer_usage.lines.push(core_line);
             }
         }
-        
+
+
         // Create the first paragraph block
         let block1 = Paragraph::new(computer_usage).fg(Color::White)
             .block(Block::default()
