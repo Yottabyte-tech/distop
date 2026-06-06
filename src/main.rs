@@ -40,6 +40,9 @@ struct Args {
     worker: bool,
 
     #[arg(long)]
+    include: bool,
+    
+    #[arg(long)]
     ip: Option<String>,
 }
 
@@ -74,6 +77,13 @@ async fn main() -> anyhow::Result<()> {
         let head_logic = tokio::spawn(head::run(args.port));
         let tui_logic = tokio::spawn(render_tui());
         
+        if args.include {
+            
+            let port = args.port;
+
+            let worker_logic = tokio::spawn(worker::run("127.0.0.1".to_string(), port));
+
+        }
         // Get if one fails, mostly if the user presses "q"
         tokio::select! {
             res = head_logic => {
