@@ -141,7 +141,7 @@ fn render_app(frame: &mut Frame) {
         // Split the terminal horizontally into 2 equal columns (50% each)
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(25), Constraint::Percentage(75)])
+            .constraints([Constraint::Min(52), Constraint::Percentage(75)])
             .split(frame.area());
 
 
