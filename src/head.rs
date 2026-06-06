@@ -8,9 +8,9 @@ use futures_util::StreamExt;
 use tokio_util::codec::{Decoder, LinesCodec};
 
 
-use crate::handle_data::ProcessData;
-use crate::handle_data::CreateNode;
-use crate::handle_data::RemoveNode;
+use crate::handle_data::process_data;
+use crate::handle_data::create_node;
+use crate::handle_data::remove_node;
 
 
 pub async fn run(port: u16) -> anyhow::Result<()> {
@@ -45,26 +45,26 @@ pub async fn run(port: u16) -> anyhow::Result<()> {
                         match serde_json::from_str::<WorkerInfo>(&line) {
                             Ok(info) => {
                                 if first_time{
-                                    CreateNode(&info);
+                                    create_node(&info);
                                     first_time = false;
                                 }
                                 node_name = info.clone().hostname;
-                                ProcessData(&info, &node_name);
+                                process_data(&info, &node_name);
                             }
                             Err(e) => {
                                 eprintln!("[-] Failed to parse WorkerInfo from line: {}", e);
-                                RemoveNode(&node_name);
+                                remove_node(&node_name);
                             }
                         }
                     }
                     Err(e) => {
                         eprintln!("[-] Stream error or unexpected disconnect from {}: {}", addr, e);
-                        RemoveNode(&node_name);
+                        remove_node(&node_name);
                         break;
                     }
                 }
             }
-            RemoveNode(&node_name);
+            remove_node(&node_name);
         });
     }
 }

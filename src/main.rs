@@ -20,7 +20,7 @@ mod get_data;
 // Import the node list var for importing data
 use handle_data::NODE_LIST;
 
-use crate::get_data::processes::running_processes; // Parser for the command line that reads flags and args
+// Parser for the command line that reads flags and args
 use clap::Parser;
 
 // Macro that generates code to parse CLI args
@@ -45,10 +45,10 @@ struct Args {
 }
 
 
-struct CoreGraph {
-    hostname: String,
-    core_index: i32,
-    graph_data: String,
+pub struct CoreGraph {
+    pub hostname: String,
+    pub core_index: i32,
+    pub graph_data: String,
 }
 
 
@@ -79,7 +79,7 @@ async fn main() -> anyhow::Result<()> {
             
             let port = args.port;
 
-            let worker_logic = tokio::spawn(worker::run("127.0.0.1".to_string(), port));
+            tokio::spawn(worker::run("127.0.0.1".to_string(), port));
 
         }
         // Get if one fails, mostly if the user presses "q"
@@ -104,7 +104,7 @@ async fn render_tui() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     loop {
         terminal.draw(render_app)?;
 
-        if event::poll(std::time::Duration::from_millis(500))? {
+        if event::poll(std::time::Duration::from_millis(1000))? {
             if let Event::Key(key) = event::read()? {
                 if key.code == KeyCode::Char('q') {
                     break;
@@ -143,41 +143,39 @@ fn render_app(frame: &mut Frame) {
             .direction(Direction::Horizontal)
             .constraints([Constraint::Percentage(25), Constraint::Percentage(75)])
             .split(frame.area());
-           
-
-
 
 
 
         let mut computer_usage: String = "".to_string();
         
         for list_elem in list.iter(){
-        
-            let node_name = &list_elem.info.hostname;
+
             let node_cpu_usage = format!("CPU Usage: [ {:.2}% ]", list_elem.info.cpu_usage);
             
-            let computer_usage_block = format!("\n\n╭─┤{}│\n│\n├─┤{}\n│", node_name, node_cpu_usage);
+            let computer_usage_block = format!("\n\n╭─┤{}│\n│\n├─┤{}\n│", &list_elem.info.hostname, node_cpu_usage);
+
             computer_usage = format!("{}{}", computer_usage, computer_usage_block);
-            
-            let mut core_index = 0;
-            for core in list_elem.info.cores.iter(){
+           
+
+            for (_index, core) in list_elem.info.cores.iter().enumerate(){
                 
-                core_index = core_index + 1;
+                let core_index: i32 = _index as i32;
                 
                 let mut core_list = CORE_GRAPHS.lock().unwrap();
                 
                 let core_graph_data = core_list.iter().position(|item| item.core_index == core_index && item.hostname == list_elem.info.hostname.to_string());
                 
                 let map_to_bar: f32 = (core/100.0) * 8.0;
+
                 let mut graph: String = graph_chars[map_to_bar.round().max(1.0) as usize - 1].clone();
                 
                 match core_graph_data {
-                    Some(index) => {
-                        let item = &core_list[index];
+                    Some(_index) => {
+
+                        // Get graphing struct
+                        let item = &core_list[_index];
                         
-                        let current_graph = item.graph_data.clone();
-                        
-                        let mut new_graph = format!("{}{}", current_graph, graph);
+                        let mut new_graph = format!("{}{}", item.graph_data.clone(), graph);
                         
                         if new_graph.chars().count() > 20 {
                             if !new_graph.is_empty() {
@@ -185,14 +183,17 @@ fn render_app(frame: &mut Frame) {
                             }
                         }
 
-                        core_list[index].graph_data = new_graph.clone();
+                        core_list[_index].graph_data = new_graph.clone();
                         
                         graph = new_graph;
                     }
                     None => core_list.push(CoreGraph { hostname: list_elem.info.hostname.to_string(), core_index: core_index, graph_data: "                    ".to_string()}),
                 }
-                
-                computer_usage = format!("{}\n├─┤Core {} Usage: {:.2}% [ {} ]", computer_usage, core_index, core, graph);
+
+                // Graph spacing
+                let spacing: usize = 10 - format!("{}{:.2}%", core_index, core).len().min(10);
+
+                computer_usage = format!("{}\n├─┤Core {} Usage: {:.2}%{}[ {} ]", computer_usage, core_index, core, " ".to_string().repeat(spacing), graph);
             }
         }
         

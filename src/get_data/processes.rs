@@ -13,22 +13,6 @@ pub struct ProcessInfo {
     pub cpu_usage_percentage: f32,
 }
 
-pub struct HumanBytes(pub u64);
-
-impl std::fmt::Display for HumanBytes {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let bytes = self.0 as f64;
-        if bytes >= 1_073_741_824.0 {
-            write!(f, "{:.2} GB", bytes / 1_073_741_824.0)
-        } else if bytes >= 1_048_576.0 {
-            write!(f, "{:.2} MB", bytes / 1_048_576.0)
-        } else if bytes >= 1024.0 {
-            write!(f, "{:.2} KB", bytes / 1024.0)
-        } else {
-            write!(f, "{} B", self.0)
-        }
-    }
-}
 
 fn get_process_ticks(proc: &process::Process) -> u64 {
     let mut total_ticks = 0;

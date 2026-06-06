@@ -33,7 +33,7 @@ pub async fn run(head_ip: String, port: u16) -> anyhow::Result<()> {
                 println!("Connected to head node. Sending updates...");
                 // Pass the mutable reference into the sender loop
                 while let Ok(_) = send_worker_info(&mut stream, &hostname, &mut sys).await {
-                    tokio::time::sleep(Duration::from_millis(500)).await;
+                    tokio::time::sleep(Duration::from_millis(1000)).await;
                 }
             }
             Err(_e) => {
@@ -55,7 +55,7 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
     let load = System::load_average(); // Gets the system load
 
     let mut cores_list = Vec::new();
-    for (index, cpu) in sys.cpus().iter().enumerate() {
+    for cpu in sys.cpus().iter() {
         cores_list.push(cpu.cpu_usage());
     }
 
