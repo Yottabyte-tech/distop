@@ -17,3 +17,4 @@ tokio-util = { version = "0.7.18", features = ["codec"] }
 futures-util = "0.3.32"
 ratatui = "0.30.0"
 crossterm = "0.29.0"
+ratatui-macros = "0.7.1"
