@@ -5,6 +5,8 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph, BorderType},
     Frame,
 };
+use ratatui::style::Color;
+use ratatui::prelude::Stylize;
 use std::io;
 
 use std::sync::{LazyLock, Mutex};
@@ -187,11 +189,13 @@ fn render_app(frame: &mut Frame) {
         }
         
         // Create the first paragraph block
-        let block1 = Paragraph::new(computer_usage)
+        let block1 = Paragraph::new(computer_usage).fg(Color::White)
             .block(Block::default()
                    .borders(Borders::ALL)
                    .title("╯CPU╰")
                    .border_type(BorderType::Rounded)
+                   .fg(Color::Rgb(200,0,0))
+                   .bg(Color::Rgb(0,0,0))
             );
             
         // Create the second paragraph block
@@ -200,6 +204,7 @@ fn render_app(frame: &mut Frame) {
                    .borders(Borders::ALL)
                    .title("╯RAM╰")
                    .border_type(BorderType::Rounded)
+                   .bg(Color::Rgb(0,0,0))
             );
             
         // Render them in the split chunks

@@ -33,13 +33,13 @@ pub async fn run(head_ip: String, port: u16) -> anyhow::Result<()> {
                 println!("Connected to head node. Sending updates...");
                 // Pass the mutable reference into the sender loop
                 while let Ok(_) = send_worker_info(&mut stream, &hostname, &mut sys).await {
-                    tokio::time::sleep(Duration::from_secs(3)).await;
+                    tokio::time::sleep(Duration::from_millis(500)).await;
                 }
             }
             Err(e) => {
 
-                // When connection is lost to head node, retry connection every 5 seconds
-                tokio::time::sleep(Duration::from_secs(5)).await;
+                // When connection is lost to head node, retry connection every 1 seconds
+                tokio::time::sleep(Duration::from_secs(1)).await;
             }
         }
     }
