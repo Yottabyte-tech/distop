@@ -14,11 +14,15 @@ use crate::get_data::processes::running_processes;
 
 pub async fn run(head_ip: String, port: u16) -> anyhow::Result<()> {
     println!("Worker started → Connecting to head node {}:{}", head_ip, port);
-    
+   
+
+
     // Gets the computer's hostname, otherwise returns "unknown"
     let hostname = hostname::get()
         .map(|h| h.to_string_lossy().to_string())
         .unwrap_or_else(|_| "unknown".to_string());
+
+
 
     // Initialize the system state ONCE here so it retains metrics history across iterations
     let mut sys = System::new_with_specifics(RefreshKind::everything());
@@ -30,7 +34,6 @@ pub async fn run(head_ip: String, port: u16) -> anyhow::Result<()> {
         match TcpStream::connect(format!("{}:{}", head_ip, port)).await {
 
             Ok(mut stream) => {
-                println!("Connected to head node. Sending updates...");
                 // Pass the mutable reference into the sender loop
                 while let Ok(_) = send_worker_info(&mut stream, &hostname, &mut sys).await {
                     tokio::time::sleep(Duration::from_millis(1000)).await;
@@ -38,7 +41,7 @@ pub async fn run(head_ip: String, port: u16) -> anyhow::Result<()> {
             }
             Err(_e) => {
 
-                // When connection is lost to head node, retry connection every 1 seconds
+                // When connection is lost to head node, retry connection every 1 second
                 tokio::time::sleep(Duration::from_secs(1)).await;
             }
         }
@@ -52,7 +55,6 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
 
     let ram_used = sys.used_memory() as f64 / 1_073_741_824.0; // Gets RAM usage
     let ram_total = sys.total_memory() as f64 / 1_073_741_824.0; // Gets ammount of system RAM
-    let load = System::load_average(); // Gets the system load
 
     let mut cores_list = Vec::new();
     for cpu in sys.cpus().iter() {
@@ -62,13 +64,10 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
     // Adds all of the data to the message.rs WorkerInfo struct
     let info = WorkerInfo {
         hostname: hostname.to_string(),
-        timestamp: chrono::Utc::now(),
         cpu_usage: sys.global_cpu_usage(),
         ram_used_gb: ram_used,
         ram_total_gb: ram_total,
-        load_average_1min: load.one,
         process_count: sys.processes().len(),
-        status: "online".to_string(),
         processes: running_processes(),
         cores: cores_list,
     };
