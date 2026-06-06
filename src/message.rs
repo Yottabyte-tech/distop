@@ -10,4 +10,5 @@ pub struct WorkerInfo {
     pub process_count: usize,
     pub processes: Vec<ProcessInfo>,
     pub cores: Vec<f32>,
+    pub ram_graph: String,
 }

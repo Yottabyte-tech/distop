@@ -7,15 +7,12 @@ use tokio::io::AsyncWriteExt;
 // Represents time durations
 use std::time::Duration;
 // Imports sysinfo to read usage details
-use sysinfo::{System, RefreshKind};
+use sysinfo::{System, RefreshKind, Components};
 
 use crate::get_data::processes::running_processes;
 
 
 pub async fn run(head_ip: String, port: u16) -> anyhow::Result<()> {
-    println!("Worker started → Connecting to head node {}:{}", head_ip, port);
-   
-
 
     // Gets the computer's hostname, otherwise returns "unknown"
     let hostname = hostname::get()
@@ -53,6 +50,8 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
     // Reads all data and pushes it to sys (tracks true delta since the last tick)
     sys.refresh_all();
 
+    let components = Components::new_with_refreshed_list();
+    
     let ram_used = sys.used_memory() as f64 / 1_073_741_824.0; // Gets RAM usage
     let ram_total = sys.total_memory() as f64 / 1_073_741_824.0; // Gets ammount of system RAM
 
@@ -70,6 +69,7 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
         process_count: sys.processes().len(),
         processes: running_processes(),
         cores: cores_list,
+        ram_graph: "".to_string()
     };
     
     // Converts struct to JSON

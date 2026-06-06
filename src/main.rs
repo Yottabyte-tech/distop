@@ -141,15 +141,17 @@ fn render_app(frame: &mut Frame) {
         // Split the terminal horizontally into 2 equal columns (50% each)
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Min(52), Constraint::Percentage(75)])
+            .constraints([Constraint::Min(52), Constraint::Min(42), Constraint::Min(10)])
             .split(frame.area());
 
 
 
         let mut computer_usage = Text::default();
         
-        for list_elem in list.iter(){
+        let mut ram_usage = Text::default();
 
+
+        for list_elem in list.iter(){
             let node_cpu_usage = format!("CPU Usage: [ {:.2}% ]", list_elem.info.cpu_usage);
             
             // Push each line explicitly to allow granular styling
@@ -160,7 +162,7 @@ fn render_app(frame: &mut Frame) {
                 Span::raw(" │"),
             ]));
             computer_usage.lines.push(Line::from("│"));
-            computer_usage.lines.push(Line::from(format!("├─┤{}", node_cpu_usage)));
+            computer_usage.lines.push(Line::from(format!("├─┤ {}", node_cpu_usage)));
             computer_usage.lines.push(Line::from("│"));
  
 
@@ -201,16 +203,42 @@ fn render_app(frame: &mut Frame) {
                 let spacing: usize = 10 - format!("{}{:.2}%", core_index, core).len().min(10);
                 
                 let core_u8: u8 = *core as u8;
+                
+                let mut connecting_char: String = "├".to_string();
 
+                if core_index + 1 as i32 == list_elem.info.cores.len() as i32{
+                    connecting_char = "╰".to_string();
+                }
                 let core_line = Line::from(vec![
-                    Span::raw(format!("├─┤Core {} Usage: {:.2}%{}[ ", core_index, core, " ".to_string().repeat(spacing))),
+                    Span::raw(format!("{}─┤ Core {} Usage: {:.2}%{}[ ", connecting_char, core_index, core, " ".to_string().repeat(spacing))),
                     Span::raw(format!("{}", graph)).fg(Color::Rgb(core_u8, 100 - core_u8, 0)),
                     Span::raw(" ]")
                 ]);
                 
                 computer_usage.lines.push(core_line);
             }
+
+
+            // list_elem.info.ram_graph
+            
+            ram_usage.lines.push(Line::from("╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌").fg(Color::Rgb(100,100,100))); // Second newline
+            ram_usage.lines.push(Line::from(vec![
+                Span::raw("╭─┤ "),
+                Span::raw(list_elem.info.hostname.to_string()).bold().black().on_white(), // Stylize hostname as bold!
+                Span::raw(" │"),
+            ]));
+            ram_usage.lines.push(Line::from("│"));
+            ram_usage.lines.push(Line::from(format!("├─┤ RAM Usage: {:.2}% ({:.2}GB/{:.2}GB)", 100.0 * list_elem.info.ram_used_gb / list_elem.info.ram_total_gb ,list_elem.info.ram_used_gb, list_elem.info.ram_total_gb)));
+            ram_usage.lines.push(Line::from("│"));
+
+            ram_usage.lines.push(Line::from(vec![
+                Span::raw("╰─┤ [ "),
+                Span::raw(list_elem.info.hostname.to_string()).bold().black().on_white(), // Stylize hostname as bold!
+                Span::raw(" ]"),
+            ]));
         }
+
+
 
 
         // Create the first paragraph block
@@ -224,7 +252,7 @@ fn render_app(frame: &mut Frame) {
             );
             
         // Create the second paragraph block
-        let block2 = Paragraph::new("Hello World 2!")
+        let block2 = Paragraph::new(ram_usage).fg(Color::White)
             .block(Block::default()
                    .borders(Borders::ALL)
                    .title("╯RAM╰")
