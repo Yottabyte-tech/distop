@@ -58,9 +58,9 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
 
     for component in &components {
         if let Some(temp) = component.temperature() {
-            //if component.label().contains(&"CPU".to_string()) {
-            cpu_temp = format!("{}°C", temp);
-            //}
+            if component.label().contains(&"CPU".to_string()) {
+                cpu_temp = format!("{}\n{}: {}°C",cpu_temp,component.label(), temp);
+            }
         }
     }
 
