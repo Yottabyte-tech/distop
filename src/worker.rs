@@ -1,5 +1,7 @@
 // Imports the WorkerInfo struct that is sent to the head
 use crate::message::WorkerInfo;
+// Import the NetInterface struct
+use crate::message::NetInterface;
 // Imports TCP socket connection as an async, used to establish connection
 use tokio::net::TcpStream;
 // Imports write_all() method to send data asynchronously
@@ -7,9 +9,10 @@ use tokio::io::AsyncWriteExt;
 // Represents time durations
 use std::time::Duration;
 // Imports sysinfo to read usage details
-use sysinfo::{System, RefreshKind, Components};
+use sysinfo::{System, RefreshKind, Components, Networks};
 use std::fs;
 use std::path::Path;
+use std::thread;
 
 
 use crate::get_data::processes::running_processes;
@@ -62,6 +65,17 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
     }
 
 
+    let rates = get_network_transfer_rates(Duration::from_secs(1));
+
+    let mut net_interfaces: Vec<NetInterface> = Vec::new();
+
+    for (interface, rx, tx) in rates {
+
+        net_interfaces.push(NetInterface {interface: interface, download: rx, upload: tx});
+    }
+
+    net_interfaces.sort_by(|a, b| a.interface.cmp(&b.interface));
+
     let ram_used = sys.used_memory() as f64 / 1_073_741_824.0; // Gets RAM usage
     let ram_total = sys.total_memory() as f64 / 1_073_741_824.0; // Gets ammount of system RAM
 
@@ -80,6 +94,7 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
         processes: running_processes(),
         cores: cores_list,
         cpu_temp: cpu_temp,
+        network: net_interfaces
     };
     
     // Converts struct to JSON
@@ -98,9 +113,36 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
 }
 
 
+fn get_network_transfer_rates(sample_duration: Duration) -> Vec<(String, u64, u64)> {
+    
+    let mut _sys = System::new_all();
+    
+    let start_networks = Networks::new_with_refreshed_list();
+    
+    thread::sleep(sample_duration);
+    
+    let end_networks = Networks::new_with_refreshed_list();
+    let seconds_elapsed = sample_duration.as_secs_f64();
+    
+    let mut results = Vec::new();
+    
+    for (interface, start_data) in &start_networks {
+        if let Some(end_data) = end_networks.get(interface) {
+            let rx_diff = end_data.received().saturating_sub(start_data.received());
+            let tx_diff = end_data.transmitted().saturating_sub(start_data.transmitted());
+            
+            let rx_rate = (rx_diff as f64 / seconds_elapsed) as u64;
+            let tx_rate = (tx_diff as f64 / seconds_elapsed) as u64;
+            
+            results.push((interface.clone(), rx_rate, tx_rate));
+        }
+    }
+    
+    results
+}
 
 
-
+// Thank you to "btop" for this method of fetching temperature data
 pub fn get_cpu_temp() -> Option<f64> {
     if let Ok(hwmon_entries) = fs::read_dir("/sys/class/hwmon") {
         for entry in hwmon_entries.flatten() {

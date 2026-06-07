@@ -153,6 +153,8 @@ fn render_app(frame: &mut Frame) {
         
         let mut ram_usage = Text::default();
 
+        let mut network_usage = Text::default();
+
 
         for list_elem in list.iter(){
             let node_cpu_usage = format!("CPU: [ {:.2}% ]", list_elem.info.cpu_usage);
@@ -267,9 +269,20 @@ fn render_app(frame: &mut Frame) {
                 Span::raw("╰─┤ [ "),
                 Span::raw(graph).bold().fg(Color::Rgb(2 * ram_u8, 2 * (101 - ram_u8), 0)),
                 Span::raw(" ]"),
+                Span::raw(list_elem.info.network[0].interface.clone()),
             ]));
-        }
 
+            
+            network_usage.lines.push(Line::from("╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌").fg(Color::Rgb(100,100,100))); // Second newline
+            network_usage.lines.push(Line::from(vec![
+                Span::raw("╭─┤ "),
+                Span::raw(list_elem.info.hostname.clone()).underlined(),
+                Span::raw(" │"),
+            ]));
+            network_usage.lines.push(Line::from("│"));
+
+        }
+        
 
 
 
@@ -307,7 +320,7 @@ fn render_app(frame: &mut Frame) {
                    .bg(Color::Rgb(0,0,0))
             );
             
-        let network_block = Paragraph::new("a").fg(Color::White)
+        let network_block = Paragraph::new(network_usage).fg(Color::White)
             .block(Block::default()
                    .borders(Borders::ALL)
                    .title("╯Network╰")

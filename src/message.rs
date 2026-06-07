@@ -11,4 +11,13 @@ pub struct WorkerInfo {
     pub processes: Vec<ProcessInfo>,
     pub cores: Vec<f32>,
     pub cpu_temp: String,
+    pub network: Vec<NetInterface>,
+}
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct NetInterface {
+    pub interface: String,
+    pub download: u64,
+    pub upload: u64,
 }
