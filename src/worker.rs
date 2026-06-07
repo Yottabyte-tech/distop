@@ -63,6 +63,8 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
             if let Some(temp) = component.temperature() {
                 // REMOVED "Some()" from the text template here:
                 cpu_temp = format!("{:.1}°C", temp);
+
+                println!("{}", cpu_temp);
             }
         }
     }
