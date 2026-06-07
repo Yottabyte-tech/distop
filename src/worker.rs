@@ -9,6 +9,7 @@ use std::time::Duration;
 // Imports sysinfo to read usage details
 use sysinfo::{System, RefreshKind, Components};
 
+
 use crate::get_data::processes::running_processes;
 
 
@@ -49,27 +50,22 @@ pub async fn run(head_ip: String, port: u16) -> anyhow::Result<()> {
 async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut System) -> Result<(), std::io::Error> {
     // Reads all data and pushes it to sys (tracks true delta since the last tick)
     sys.refresh_all();
-
     
-
-    let components = Components::new_with_refreshed_list();
 
     let mut cpu_temp: String = String::default();
 
-    let cpu_temps: Vec<_> = components
-        .iter()
-        .filter(|c| {
-            let label = c.label().to_lowercase();
-            label.contains("cpu")  // || label.contains("core")
-        })
-        .collect();
+    let components = Components::new_with_refreshed_list();
 
-    for component in cpu_temps {
-        if let Some(temp) = component.temperature() {
-            cpu_temp = format!("{}: {:.1}°C", component.label(), temp);
+    for component in &components {
+        let label = component.label().to_lowercase();
+        
+        if label.contains("cpu") {
+            if let Some(temp) = component.temperature() {
+                // REMOVED "Some()" from the text template here:
+                cpu_temp = format!("{:.1}°C", temp);
+            }
         }
     }
-
 
     let ram_used = sys.used_memory() as f64 / 1_073_741_824.0; // Gets RAM usage
     let ram_total = sys.total_memory() as f64 / 1_073_741_824.0; // Gets ammount of system RAM
