@@ -169,7 +169,7 @@ fn render_app(frame: &mut Frame) {
                 Span::raw(" │"),
             ]));
             computer_usage.lines.push(Line::from("│"));
-            computer_usage.lines.push(Line::from(format!("├─┤ {}", node_cpu_usage)));
+            computer_usage.lines.push(Line::from(format!("├─┤ {} {}", node_cpu_usage, list_elem.info.cpu_temp)));
             computer_usage.lines.push(Line::from("│"));
  
 
@@ -221,7 +221,6 @@ fn render_app(frame: &mut Frame) {
                     Span::raw(format!("{}", graph)).fg(Color::Rgb(core_u8, 100 - core_u8, 0)),
                     Span::raw(" ]")
                 ]);
-                
                 computer_usage.lines.push(core_line);
             }
 
@@ -254,7 +253,6 @@ fn render_app(frame: &mut Frame) {
                 None => ram_list.push(RAMGraph { hostname: list_elem.info.hostname.to_string(), graph_data: "                    ".to_string()}),
             }
            
-            println!("{}", list_elem.info.cpu_temp);
 
             let ram_u8: u8 = (list_elem.info.ram_used_gb/list_elem.info.ram_total_gb) as u8;
 
