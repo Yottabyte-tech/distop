@@ -8,6 +8,8 @@ use tokio::io::AsyncWriteExt;
 use std::time::Duration;
 // Imports sysinfo to read usage details
 use sysinfo::{System, RefreshKind, Components};
+use std::fs;
+use std::path::Path;
 
 
 use crate::get_data::processes::running_processes;
@@ -54,20 +56,11 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
 
     let mut cpu_temp: String = String::default();
 
-    let components = Components::new_with_refreshed_list();
-
-    for component in &components {
-        let label = component.label().to_lowercase();
-        
-        if label.contains("cpu") {
-            if let Some(temp) = component.temperature() {
-                // REMOVED "Some()" from the text template here:
-                cpu_temp = format!("{:.1}°C", temp);
-
-                println!("{}", cpu_temp);
-            }
-        }
+    match get_cpu_temp() {
+        Some(temp) => println!("CPU: {:.1}°C", temp),
+        None => println!("CPU temperature could not be detected."),
     }
+
 
     let ram_used = sys.used_memory() as f64 / 1_073_741_824.0; // Gets RAM usage
     let ram_total = sys.total_memory() as f64 / 1_073_741_824.0; // Gets ammount of system RAM
@@ -104,3 +97,48 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
     Ok(())
 }
 
+
+
+
+
+pub fn get_cpu_temp() -> Option<f64> {
+    if let Ok(hwmon_entries) = fs::read_dir("/sys/class/hwmon") {
+        for entry in hwmon_entries.flatten() {
+            if let Ok(canonical) = fs::canonicalize(entry.path()) {
+                if let Ok(files) = fs::read_dir(&canonical) {
+                    for file in files.flatten() {
+                        let filename = file.file_name().to_string_lossy().into_owned();
+                        if filename.starts_with("temp") && filename.ends_with("_input") {
+                            let base = file.path().to_string_lossy().replace("input", "");
+                            let label = fs::read_to_string(format!("{}label", base)).unwrap_or_default();
+                            
+                            if label.starts_with("Package id") || label.starts_with("Tdie") || label.starts_with("SoC Temperature") {
+                                if let Ok(raw) = fs::read_to_string(file.path()) {
+                                    if let Ok(temp_val) = raw.trim().parse::<f64>() {
+                                        return Some(temp_val / 1000.0);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let mut i = 0;
+    loop {
+        let zone_path = format!("/sys/class/thermal/thermal_zone{}/temp", i);
+        if !Path::new(&zone_path).exists() {
+            break;
+        }
+        if let Ok(raw) = fs::read_to_string(&zone_path) {
+            if let Ok(temp_val) = raw.trim().parse::<f64>() {
+                return Some(temp_val / 1000.0);
+            }
+        }
+        i += 1;
+    }
+
+    None
+}
