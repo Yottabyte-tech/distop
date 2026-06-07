@@ -57,8 +57,8 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
     let mut cpu_temp: String = String::default();
 
     match get_cpu_temp() {
-        Some(temp) => println!("CPU: {:.1}°C", temp),
-        None => println!("CPU temperature could not be detected."),
+        Some(temp) => cpu_temp = format!("{:.1}°C", temp),
+        None => cpu_temp = format!(""),
     }
 
 
