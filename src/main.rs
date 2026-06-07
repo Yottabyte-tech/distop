@@ -50,9 +50,13 @@ pub struct CoreGraph {
     pub core_index: i32,
     pub graph_data: String,
 }
-
+pub struct RAMGraph {
+    pub hostname: String,
+    pub graph_data: String,
+}
 
 pub static CORE_GRAPHS: LazyLock<Mutex<Vec<CoreGraph>>> = LazyLock::new(|| Mutex::new(Vec::new()));
+pub static RAM_GRAPHS: LazyLock<Mutex<Vec<RAMGraph>>> = LazyLock::new(|| Mutex::new(Vec::new()));
 
 
 // Macro that turns the main function into an async #[tokio::main]
@@ -138,13 +142,16 @@ fn render_app(frame: &mut Frame) {
 
 
 
-        // Split the terminal horizontally into 2 equal columns (50% each)
-        let chunks = Layout::default()
+        let horizontal = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Min(52), Constraint::Min(42), Constraint::Min(10)])
+            .constraints([Constraint::Min(52), Constraint::Min(42), Constraint::Percentage(100)])
             .split(frame.area());
 
 
+        let vertical = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
+            .split(horizontal[2]);
 
         let mut computer_usage = Text::default();
         
@@ -152,13 +159,13 @@ fn render_app(frame: &mut Frame) {
 
 
         for list_elem in list.iter(){
-            let node_cpu_usage = format!("CPU Usage: [ {:.2}% ]", list_elem.info.cpu_usage);
+            let node_cpu_usage = format!("CPU: [ {:.2}% ]", list_elem.info.cpu_usage);
             
             // Push each line explicitly to allow granular styling
             computer_usage.lines.push(Line::from("╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌").fg(Color::Rgb(100,100,100))); // Second newline
             computer_usage.lines.push(Line::from(vec![
                 Span::raw("╭─┤ "),
-                Span::raw(list_elem.info.hostname.to_string()).bold().black().on_white(), // Stylize hostname as bold!
+                Span::raw(list_elem.info.hostname.to_string()).bold().underlined(),
                 Span::raw(" │"),
             ]));
             computer_usage.lines.push(Line::from("│"));
@@ -210,7 +217,7 @@ fn render_app(frame: &mut Frame) {
                     connecting_char = "╰".to_string();
                 }
                 let core_line = Line::from(vec![
-                    Span::raw(format!("{}─┤ Core {} Usage: {:.2}%{}[ ", connecting_char, core_index, core, " ".to_string().repeat(spacing))),
+                    Span::raw(format!("{}─┤ Core {}: {:.2}%{}[ ", connecting_char, core_index, core, " ".to_string().repeat(spacing))),
                     Span::raw(format!("{}", graph)).fg(Color::Rgb(core_u8, 100 - core_u8, 0)),
                     Span::raw(" ]")
                 ]);
@@ -219,21 +226,51 @@ fn render_app(frame: &mut Frame) {
             }
 
 
-            // list_elem.info.ram_graph
+            let mut ram_list = RAM_GRAPHS.lock().unwrap();
             
+            let ram_graph_data = ram_list.iter().position(|item| item.hostname == list_elem.info.hostname.to_string());
+
+            let map_to_bar: f64 = (list_elem.info.ram_used_gb/list_elem.info.ram_total_gb) * 8.0;
+
+            let mut graph: String = graph_chars[map_to_bar.round().max(1.0) as usize - 1].clone();
+            match ram_graph_data {
+                Some(_index) => {
+
+                    // Get graphing struct
+                    let item = &ram_list[_index];
+                        
+                    let mut new_graph = format!("{}{}", item.graph_data.clone(), graph);
+                        
+                    if new_graph.chars().count() > 20 {
+                        if !new_graph.is_empty() {
+                            new_graph.remove(0); 
+                        }
+                    }
+
+                    ram_list[_index].graph_data = new_graph.clone();
+                        
+                    graph = new_graph;
+                }
+                None => ram_list.push(RAMGraph { hostname: list_elem.info.hostname.to_string(), graph_data: "                    ".to_string()}),
+            }
+           
+            println!("{}", list_elem.info.cpu_temp);
+
+            let ram_u8: u8 = (list_elem.info.ram_used_gb/list_elem.info.ram_total_gb) as u8;
+
             ram_usage.lines.push(Line::from("╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌").fg(Color::Rgb(100,100,100))); // Second newline
             ram_usage.lines.push(Line::from(vec![
                 Span::raw("╭─┤ "),
-                Span::raw(list_elem.info.hostname.to_string()).bold().black().on_white(), // Stylize hostname as bold!
+                Span::raw(list_elem.info.hostname.clone()).underlined(),
                 Span::raw(" │"),
             ]));
             ram_usage.lines.push(Line::from("│"));
-            ram_usage.lines.push(Line::from(format!("├─┤ RAM Usage: {:.2}% ({:.2}GB/{:.2}GB)", 100.0 * list_elem.info.ram_used_gb / list_elem.info.ram_total_gb ,list_elem.info.ram_used_gb, list_elem.info.ram_total_gb)));
+            ram_usage.lines.push(Line::from(format!("├─┤ RAM: {:.2}% ({:.2}GB/{:.2}GB)", 100.0 * list_elem.info.ram_used_gb / list_elem.info.ram_total_gb ,list_elem.info.ram_used_gb, list_elem.info.ram_total_gb)));
             ram_usage.lines.push(Line::from("│"));
 
             ram_usage.lines.push(Line::from(vec![
                 Span::raw("╰─┤ [ "),
-                Span::raw(list_elem.info.hostname.to_string()).bold().black().on_white(), // Stylize hostname as bold!
+                Span::raw(graph).fg(Color::Rgb(ram_u8, 100 - ram_u8, 0)),
                 Span::raw(" ]"),
             ]));
         }
@@ -242,27 +279,38 @@ fn render_app(frame: &mut Frame) {
 
 
         // Create the first paragraph block
-        let block1 = Paragraph::new(computer_usage).fg(Color::White)
+        let cpu_block = Paragraph::new(computer_usage).fg(Color::White)
             .block(Block::default()
                    .borders(Borders::ALL)
                    .title("╯CPU╰")
                    .border_type(BorderType::Rounded)
-                   .fg(Color::Rgb(200,0,0))
+                   .fg(Color::Rgb(150,75,75))
                    .bg(Color::Rgb(0,0,0))
             );
             
         // Create the second paragraph block
-        let block2 = Paragraph::new(ram_usage).fg(Color::White)
+        let ram_block = Paragraph::new(ram_usage).fg(Color::White)
             .block(Block::default()
                    .borders(Borders::ALL)
                    .title("╯RAM╰")
                    .border_type(BorderType::Rounded)
+                   .fg(Color::Rgb(75,150,75))
                    .bg(Color::Rgb(0,0,0))
             );
             
-        // Render them in the split chunks
-        frame.render_widget(block1, chunks[0]);
-        frame.render_widget(block2, chunks[1]);
+        let network_block = Paragraph::new("a").fg(Color::White)
+            .block(Block::default()
+                   .borders(Borders::ALL)
+                   .title("╯Network╰")
+                   .border_type(BorderType::Rounded)
+                   .fg(Color::Rgb(75,75,150))
+                   .bg(Color::Rgb(0,0,0))
+            );
+
+
+        frame.render_widget(cpu_block, horizontal[0]);
+        frame.render_widget(ram_block, horizontal[1]);
+        frame.render_widget(network_block, vertical[0]);
     }
 }
 

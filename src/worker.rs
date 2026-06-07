@@ -50,8 +50,20 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
     // Reads all data and pushes it to sys (tracks true delta since the last tick)
     sys.refresh_all();
 
-    let components = Components::new_with_refreshed_list();
     
+
+    let components = Components::new_with_refreshed_list();
+
+    let mut cpu_temp: String = String::default();
+
+    println!("--- Component Temperatures ---");
+    for component in &components {
+        if let Some(temp) = component.temperature() {
+            cpu_temp = format!("{}: {}°C\n", component.label(), temp);
+        }
+    }
+
+
     let ram_used = sys.used_memory() as f64 / 1_073_741_824.0; // Gets RAM usage
     let ram_total = sys.total_memory() as f64 / 1_073_741_824.0; // Gets ammount of system RAM
 
@@ -69,7 +81,7 @@ async fn send_worker_info(stream: &mut TcpStream, hostname: &str, sys: &mut Syst
         process_count: sys.processes().len(),
         processes: running_processes(),
         cores: cores_list,
-        ram_graph: "".to_string()
+        cpu_temp: cpu_temp,
     };
     
     // Converts struct to JSON
