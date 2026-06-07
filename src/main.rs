@@ -129,14 +129,10 @@ fn render_app(frame: &mut Frame) {
         if list.len() > 0 {
         
         let graph_chars: Vec<String> = vec![
-            "▁".to_string(),
-            "▂".to_string(),
-            "▃".to_string(),
-            "▄".to_string(),
-            "▅".to_string(),
-            "▆".to_string(),
-            "▇".to_string(),
-            "█".to_string(),
+            "⣀".to_string(),
+            "⣤".to_string(),
+            "⣶".to_string(),
+            "⣿".to_string(),
         ];
         
 
@@ -181,7 +177,7 @@ fn render_app(frame: &mut Frame) {
                 
                 let core_graph_data = core_list.iter().position(|item| item.core_index == core_index && item.hostname == list_elem.info.hostname.to_string());
                 
-                let map_to_bar: f32 = (core/100.0) * 8.0;
+                let map_to_bar: f32 = (core/100.0) * 4.0;
 
                 let mut graph: String = graph_chars[map_to_bar.round().max(1.0) as usize - 1].clone();
                 
@@ -216,9 +212,10 @@ fn render_app(frame: &mut Frame) {
                 if core_index + 1 as i32 == list_elem.info.cores.len() as i32{
                     connecting_char = "╰".to_string();
                 }
+
                 let core_line = Line::from(vec![
                     Span::raw(format!("{}─┤ Core {}: {:.2}%{}[ ", connecting_char, core_index, core, " ".to_string().repeat(spacing))),
-                    Span::raw(format!("{}", graph)).fg(Color::Rgb(core_u8, 100 - core_u8, 0)),
+                    Span::raw(format!("{}", graph)).bold().fg(Color::Rgb(2 * core_u8, 2 * (101 - core_u8), 0)),
                     Span::raw(" ]")
                 ]);
                 computer_usage.lines.push(core_line);
@@ -229,7 +226,7 @@ fn render_app(frame: &mut Frame) {
             
             let ram_graph_data = ram_list.iter().position(|item| item.hostname == list_elem.info.hostname.to_string());
 
-            let map_to_bar: f64 = (list_elem.info.ram_used_gb/list_elem.info.ram_total_gb) * 8.0;
+            let map_to_bar: f64 = (list_elem.info.ram_used_gb/list_elem.info.ram_total_gb) * 4.0;
 
             let mut graph: String = graph_chars[map_to_bar.round().max(1.0) as usize - 1].clone();
             match ram_graph_data {
@@ -254,7 +251,7 @@ fn render_app(frame: &mut Frame) {
             }
            
 
-            let ram_u8: u8 = (list_elem.info.ram_used_gb/list_elem.info.ram_total_gb) as u8;
+            let ram_u8: u8 = (100.0 * list_elem.info.ram_used_gb/list_elem.info.ram_total_gb) as u8;
 
             ram_usage.lines.push(Line::from("╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌").fg(Color::Rgb(100,100,100))); // Second newline
             ram_usage.lines.push(Line::from(vec![
@@ -268,7 +265,7 @@ fn render_app(frame: &mut Frame) {
 
             ram_usage.lines.push(Line::from(vec![
                 Span::raw("╰─┤ [ "),
-                Span::raw(graph).fg(Color::Rgb(ram_u8, 100 - ram_u8, 0)),
+                Span::raw(graph).bold().fg(Color::Rgb(2 * ram_u8, 2 * (101 - ram_u8), 0)),
                 Span::raw(" ]"),
             ]));
         }
@@ -280,7 +277,14 @@ fn render_app(frame: &mut Frame) {
         let cpu_block = Paragraph::new(computer_usage).fg(Color::White)
             .block(Block::default()
                    .borders(Borders::ALL)
-                   .title("╯CPU╰")
+                   .title(Line::from(vec![
+                        Span::raw("╯"),
+                        Span::raw("C").red().underlined().bold(),
+                        Span::raw("PU").white(),
+                        Span::raw("╰───╯"),
+                        Span::raw("Search:_______").white(),
+                        Span::raw("╰"),
+                   ]))
                    .border_type(BorderType::Rounded)
                    .fg(Color::Rgb(150,75,75))
                    .bg(Color::Rgb(0,0,0))
@@ -290,7 +294,14 @@ fn render_app(frame: &mut Frame) {
         let ram_block = Paragraph::new(ram_usage).fg(Color::White)
             .block(Block::default()
                    .borders(Borders::ALL)
-                   .title("╯RAM╰")
+                   .title(Line::from(vec![
+                        Span::raw("╯"),
+                        Span::raw("R").red().underlined(),
+                        Span::raw("AM").white(),
+                        Span::raw("╰───╯"),
+                        Span::raw("Search:_______").white(),
+                        Span::raw("╰"),
+                   ]))
                    .border_type(BorderType::Rounded)
                    .fg(Color::Rgb(75,150,75))
                    .bg(Color::Rgb(0,0,0))
